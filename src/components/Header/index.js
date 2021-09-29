@@ -13,7 +13,13 @@ export default function Header() {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            className="header"
+            component="div"
+            sx={{ flexGrow: 1 }}
+            onClick={() => history.push(APP_ROUTES.HOME)}
+          >
             ParallelDots
           </Typography>
 

@@ -1,5 +1,14 @@
 import React, { Component, createRef } from "react";
+import { connect } from "react-redux";
+import { func } from "prop-types";
+import { createStructuredSelector } from "reselect";
+import { withRouter } from "react-router-dom";
+
 import ShelfImage from "../../assets/shelf_image.jpeg";
+import { getImageInfo, isRequesting } from "../../reducers/Image/selectors";
+import { setImageInfo, setIsRequesting } from "../../reducers/Image/actions";
+import Switch from "@mui/material/Switch";
+import "./imageView.css";
 
 const canvasRef = createRef();
 
@@ -21,10 +30,22 @@ class Image1 extends Component {
   };
 
   componentDidMount() {
-    this.loadImage();
+    this.props.setIsRequesting(true);
+
+    // set data from api here
+    this.props.setImageInfo(this.state.imageRender);
+    this.props.setIsRequesting(false);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.image_info !== this.props.image_info) {
+      this.loadImage();
+    }
   }
 
   drawRect = () => {
+    const { mappings } = this.props.image_info;
+
     let canvas = canvasRef.current;
     let ctx = canvas.getContext("2d");
     ctx.beginPath();
@@ -33,7 +54,7 @@ class Image1 extends Component {
     this.setState({
       renderStatus: !this.state.renderStatus,
     });
-    this.state.imageRender.mappings.map((item) => {
+    mappings.map((item) => {
       if (this.state.renderStatus) {
         this.loadImage();
         return true;
@@ -45,13 +66,16 @@ class Image1 extends Component {
   };
 
   loadImage() {
+    const { imageSrc } = this.props.image_info;
+
     let canvas = canvasRef.current;
     let ctx = canvas.getContext("2d");
+
     canvas.width = 600;
     canvas.height = 400;
 
     var imgObj = new Image();
-    imgObj.src = this.state.imageRender.imageSrc;
+    imgObj.src = imageSrc;
     imgObj.onload = function () {
       let w = canvas.width;
       let nw = imgObj.naturalWidth;
@@ -72,13 +96,24 @@ class Image1 extends Component {
   render() {
     const { renderStatus } = this.state;
     return (
-      <>
+      <div className="image__main">
         <canvas ref={canvasRef}></canvas>
-        <button onClick={() => this.handleShow()}>
-          {renderStatus ? <>Hide</> : <>Show</>}
-        </button>
-      </>
+        <Switch checked={renderStatus} onChange={() => this.handleShow()} />
+      </div>
     );
   }
 }
-export default Image1;
+
+Image1.propTypes = {
+  setImageInfo: func.isRequired,
+  setIsRequesting: func.isRequired,
+};
+
+const mapStateToProps = createStructuredSelector({
+  image_info: getImageInfo(),
+  isRequesting: isRequesting(),
+});
+
+export default connect(mapStateToProps, { setImageInfo, setIsRequesting })(
+  withRouter(Image1)
+);
